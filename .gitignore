@@ -2,6 +2,7 @@
 *.d
 
 # Object files
+obj/
 *.o
 *.ko
 *.obj
@@ -29,6 +30,7 @@
 *.dylib
 
 # Executables
+bin/
 *.exe
 *.out
 *.app
@@ -50,3 +52,11 @@ modules.order
 Module.symvers
 Mkfile.old
 dkms.conf
+
+# clion stuff
+.cproject
+.idea/
+*.iml
+*.ipr
+*.iws
+*.swp
