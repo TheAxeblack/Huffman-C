@@ -1,8 +1,9 @@
-
 #ifndef HUFFMAN_C_HUFFMAN_TREE_H
 #define HUFFMAN_C_HUFFMAN_TREE_H
 
-typedef struct noeud{
+#include "Huffman.h"
+
+typedef struct noeud {
     char caractere;
     int occurence;
     char *codage;
