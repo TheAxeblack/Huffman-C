@@ -4,8 +4,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <limits.h>
 
 #define NB_CARACTERES 256
 #define TAILLE_MAX 1000
 
-#endif //HUFFMAN_C_HUFFMAN_H
+void usage(char *nom_prog);
+
+void occurence(FILE *fic, int tab[NB_CARACTERES]);
+
+#endif // HUFFMAN_C_HUFFMAN_H

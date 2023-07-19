@@ -60,3 +60,4 @@ dkms.conf
 *.ipr
 *.iws
 *.swp
+*.pdf

@@ -14,7 +14,7 @@ SRC = $(wildcard $(SRCDIR)/*.c)
 OBJ = $(patsubst $(SRCDIR)/%.c,$(OBJDIR)/%.o,$(SRC))
 
 # Executable file
-EXEC = $(BINDIR)/my_program
+EXEC ?= $(BINDIR)/my_program
 
 # Default target
 all: $(EXEC)
@@ -29,4 +29,6 @@ $(OBJDIR)/%.o: $(SRCDIR)/%.c
 
 # Clean object and executable files
 clean:
-	rm -f $(OBJDIR)/*.o $(EXEC)
+	rm -f $(OBJDIR)/*.o $(BINDIR)/*
+
+.PHONY: clean all
