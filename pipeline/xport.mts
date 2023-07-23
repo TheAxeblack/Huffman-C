@@ -1,10 +1,12 @@
 import Client, { connect } from "@dagger.io/dagger";
 import { resolve } from "path";
+import { tarExport } from "./utils.mjs";
 
-connect(async (client: Client) => {
+/* Version brute */
+/* connect(async (client: Client) => {
   const contextDir = client.host().directory(".");
 
-  const binary = await client
+  const binary = client
     .container()
     .from("gcc:13.1.0")
     .withWorkdir("/host")
@@ -21,5 +23,13 @@ connect(async (client: Client) => {
     .withExec(["ls", "/host"])
     .file("/host/bin.tar")
     .export(resolve("./bin.tar"));
-    //.stdout();
-});
+  //.stdout();
+}); */
+
+/* Version avec une fonction */
+connect(
+  async (client: Client) => {
+    await tarExport(client).export(resolve("./bin.tar"));
+  },
+  { LogOutput: process.stdout }
+);

@@ -8,8 +8,8 @@
     "typescript": "^5.1.6"
   },
   "scripts": {
-    "exec": "TS_NODE_PROJECT=tsconfig.dagger.json node --loader ts-node/esm ./pipeline/exec.mts",
-    "exec:tui": "dagger run yarn pipeline",
+    "build": "TS_NODE_PROJECT=tsconfig.dagger.json node --loader ts-node/esm ./pipeline/build.mts",
+    "build:tui": "dagger run yarn build",
     "xport": "TS_NODE_PROJECT=tsconfig.dagger.json node --loader ts-node/esm ./pipeline/xport.mts",
     "xport:tui": "dagger run yarn xport"
   }
