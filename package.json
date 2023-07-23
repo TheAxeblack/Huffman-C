@@ -1,0 +1,14 @@
+{
+  "name": "huffman-c",
+  "repository": "https://github.com/TheAxeblack/Huffman-C.git",
+  "devDependencies": {
+    "@dagger.io/dagger": "^0.6.4",
+    "@types/node": "^20.4.3",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.1.6"
+  },
+  "scripts": {
+    "pipeline": "TS_NODE_PROJECT=tsconfig.dagger.json node --loader ts-node/esm ./pipeline/main.mts",
+    "pipeline:tui": "dagger run yarn pipeline"
+  }
+}
