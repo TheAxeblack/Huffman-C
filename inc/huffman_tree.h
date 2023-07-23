@@ -1,10 +1,10 @@
 #ifndef HUFFMAN_C_HUFFMAN_TREE_H
 #define HUFFMAN_C_HUFFMAN_TREE_H
 
-#include "Huffman.h"
+#include "huffman.h"
 typedef struct noeud
 {
-    int caractere;
+    char caractere;
     int occurrence;
     char *codage;
     int nb_bits_codage;
@@ -16,7 +16,5 @@ typedef struct noeud
 void initialiser_arbre_huffman(noeud *arbre_huffman[NB_CARACTERES]);
 
 noeud *creer_feuille(int *tab, int index);
-
-void chercher_deux_plus_petits(noeud *tab[], int *index1, int *index2);
 
 #endif

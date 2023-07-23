@@ -60,4 +60,9 @@ dkms.conf
 *.ipr
 *.iws
 *.swp
+
+# Instructions for building the project
 *.pdf
+
+# vscode stuff
+.vscode/

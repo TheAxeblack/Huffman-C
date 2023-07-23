@@ -10,15 +10,12 @@ void occurence(FILE *fic, int tab[NB_CARACTERES])
 {
     int c;
     while ((c = fgetc(fic)) != EOF)
-    {
         tab[c]++;
-    }
 }
 
 void initialiser_arbre_huffman(noeud *arbre_huffman[NB_CARACTERES])
 {
-    int i;
-    for (i = 0; i < NB_CARACTERES; i++)
+    for (int i = 0; i < NB_CARACTERES; i++)
     {
         arbre_huffman[i] = NULL;
     }
@@ -41,15 +38,20 @@ noeud *creer_feuille(int *tab, int index)
     return feuille;
 }
 
-void chercher_deux_plus_petits(noeud *tab[], int *index1, int *index2)
+static void chercher_deux_plus_petits(noeud *tab[], int taille, int *index1, int *index2)
 {
     int min1 = INT_MAX, min2 = INT_MAX;
-    int i;
 
     *index1 = -1;
     *index2 = -1;
 
-    for (i = 0; i < NB_CARACTERES; i++)
+    if (taille < 2)
+    {
+        fprintf(stderr, "Erreur : taille inferieure a 2\n");
+        return;
+    }
+
+    for (int i = 0; i < NB_CARACTERES; i++)
     {
         if (tab[i] != NULL)
         {
@@ -69,18 +71,12 @@ void chercher_deux_plus_petits(noeud *tab[], int *index1, int *index2)
     }
 }
 
-void creer_noeud(noeud *tab[NB_CARACTERES], int taille)
+void creer_noeud(noeud *tab[], int taille)
 {
     int index1, index2;
     noeud *nouveau_noeud;
 
-    chercher_deux_plus_petits(tab, &index1, &index2);
-
-    if (index1 == -1 || index2 == -1)
-    {
-        fprintf(stderr, "Erreur : impossible de trouver les deux plus petits\n");
-        return;
-    }
+    chercher_deux_plus_petits(tab, taille, &index1, &index2);
 
     nouveau_noeud = (noeud *)malloc(sizeof(noeud));
     if (nouveau_noeud == NULL)
@@ -89,51 +85,73 @@ void creer_noeud(noeud *tab[NB_CARACTERES], int taille)
         exit(EXIT_FAILURE);
     }
 
+    nouveau_noeud->caractere = '\0';
     nouveau_noeud->occurrence = tab[index1]->occurrence + tab[index2]->occurrence;
+    nouveau_noeud->codage = NULL;
     nouveau_noeud->nb_bits_codage = 0;
     nouveau_noeud->fils_gauche = tab[index1];
     nouveau_noeud->fils_droit = tab[index2];
-
-    fprintf(stdout, "Occurrence : %d\n", nouveau_noeud->occurrence);
 
     tab[index1] = nouveau_noeud;
     tab[index2] = NULL;
 }
 
-void afficher_arbre_huffman(noeud *racine)
+void affichage_code(int nbr_bits, int codage)
 {
-    if (racine == NULL)
+    for (int i = nbr_bits - 1; i >= 0; i--)
     {
-        return;
+        fprintf(stdout, "%d", (codage >> i) & 1);
     }
+    fprintf(stdout, "\n");
+}
 
-    // Affichage de la valeur du noeud et son niveau
-    if (racine->occurrence > 0)
-        printf("Caractere : %c | Occurrence : %d\n", racine->caractere, racine->occurrence);
+void creer_code(noeud *element, int code, int profondeur, noeud *aplhabet[NB_CARACTERES])
+{
+    int masque;
 
-    // Parcours récursif des fils gauche et droit
-    afficher_arbre_huffman(racine->fils_gauche);
-    afficher_arbre_huffman(racine->fils_droit);
+    if (element->fils_gauche == NULL && element->fils_droit == NULL)
+    {
+        element->codage = (char *)malloc(sizeof(char) * profondeur);
+        if (element->codage == NULL)
+        {
+            fprintf(stderr, "Erreur allocation memoire pour le codage\n");
+            exit(EXIT_FAILURE);
+        }
+        element->nb_bits_codage = profondeur;
+
+        masque = 1 << (profondeur - 1);
+        for (int i = 0; i < profondeur; i++)
+        {
+            element->codage[i] = ((code & masque) == 0) ? '0' : '1';
+            masque >>= 1;
+        }
+
+        aplhabet[(int)(element->caractere)] = element;
+
+        affichage_code(profondeur, code);
+    }
+    else
+    {
+        creer_code(element->fils_gauche, (code << 1) | 0, profondeur + 1, aplhabet);
+        creer_code(element->fils_droit, (code << 1) | 1, profondeur + 1, aplhabet);
+    }
 }
 
 int main(int argc, char **argv)
 {
     FILE *fp;                             // Fichier à compresser
     int occurrences[NB_CARACTERES] = {0}; // Initialisation du tableau d'occurences à 0
-    int i;                                // Variable de boucle
     int nb_elements = 0;                  // Nombre d'éléments dans l'arbre
     noeud *arbre_huffman[NB_CARACTERES];
 
     if (argc < 2)
-    {
         usage(argv[0]);
-    }
 
     fp = fopen(argv[1], "r");
 
     if (fp == NULL)
     {
-        printf("Erreur lors de l'ouverture du fichier.\n");
+        fprintf(stderr, "Erreur lors de l'ouverture du fichier.\n");
         exit(EXIT_FAILURE);
     }
 
@@ -143,13 +161,23 @@ int main(int argc, char **argv)
 
     initialiser_arbre_huffman(arbre_huffman);
 
-    for (i = 0; i < NB_CARACTERES; i++)
+    for (int i = 0; i < NB_CARACTERES; i++)
     {
         if (occurrences[i] > 0)
         {
             nb_elements++;
             arbre_huffman[i] = creer_feuille(occurrences, i);
-            (arbre_huffman[i]->caractere == ' ') ? fprintf(stdout, "Caractere : ESPACE, Occurrence : %d\n", arbre_huffman[i]->occurrence) : fprintf(stdout, "Caractere : %c, Occurrence : %d\n", arbre_huffman[i]->caractere, arbre_huffman[i]->occurrence);
+        }
+    }
+
+    for (int i = 0; i < NB_CARACTERES; i++)
+    {
+        if (arbre_huffman[i] != NULL)
+        {
+            if (arbre_huffman[i]->caractere == ' ')
+                fprintf(stdout, "Caractere : ESPACE (%d), Occurrence : %d\n", arbre_huffman[i]->caractere, arbre_huffman[i]->occurrence);
+            else
+                fprintf(stdout, "Caractere : %c (%d), Occurrence : %d\n", arbre_huffman[i]->caractere, arbre_huffman[i]->caractere, arbre_huffman[i]->occurrence);
         }
     }
 
@@ -159,8 +187,27 @@ int main(int argc, char **argv)
         nb_elements--;
     }
 
-    afficher_arbre_huffman(arbre_huffman);
+    fprintf(stdout, "\nAffichage de l'arbre de Huffman (apres reduction):\n");
 
+    for (int i = 0; i < NB_CARACTERES; i++)
+    {
+        if (arbre_huffman[i] != NULL)
+        {
+            if (arbre_huffman[i]->caractere == ' ')
+                fprintf(stdout, "Caractere : ESPACE (%d), Occurrence : %d\n", arbre_huffman[i]->caractere, arbre_huffman[i]->occurrence);
+            else
+                fprintf(stdout, "Caractere : %c (%d), Occurrence : %d\n", arbre_huffman[i]->caractere, arbre_huffman[i]->caractere, arbre_huffman[i]->occurrence);
+        }
+    }
+
+    for (int i = 0; i < NB_CARACTERES; i++)
+    {
+        if (arbre_huffman[i] != NULL)
+        {
+            fprintf(stdout, "\nAffichage du codage de %c (%d) :\n", arbre_huffman[i]->caractere, arbre_huffman[i]->caractere);
+            creer_code(arbre_huffman[i], 0, 0, arbre_huffman);
+        }
+    }
 
     exit(EXIT_SUCCESS);
 }
