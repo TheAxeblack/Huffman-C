@@ -13,7 +13,6 @@ connect(
       .withExec(["ls", "/host"])
       .withExec(["pwd"])
       .withExec(["make"])
-      // .withExec(["/host/bin/my_program", "/host/test.txt"])
       .file("/host/bin/my_program")
       .export(resolve("./bin/my_program"));
     // .stdout();

@@ -8,7 +8,9 @@
     "typescript": "^5.1.6"
   },
   "scripts": {
-    "pipeline": "TS_NODE_PROJECT=tsconfig.dagger.json node --loader ts-node/esm ./pipeline/exec.mts",
-    "pipeline:tui": "dagger run yarn pipeline"
+    "exec": "TS_NODE_PROJECT=tsconfig.dagger.json node --loader ts-node/esm ./pipeline/exec.mts",
+    "exec:tui": "dagger run yarn pipeline",
+    "xport": "TS_NODE_PROJECT=tsconfig.dagger.json node --loader ts-node/esm ./pipeline/xport.mts",
+    "xport:tui": "dagger run yarn xport"
   }
 }
