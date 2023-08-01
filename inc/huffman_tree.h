@@ -13,8 +13,16 @@ typedef struct noeud
 } noeud;
 
 /* Prototypage des fonctions*/
-void initialiser_arbre_huffman(noeud *arbre_huffman[NB_CARACTERES]);
+void initialiser_arbre_huffman(noeud *arbre_huffman[NB_CARACTERES]); // Initialiser l'arbre de Huffman
 
-noeud *creer_feuille(int *tab, int index);
+noeud *creer_feuille(int *tab, int index); // Créer une feuille
 
-#endif
+void creer_noeud(noeud *tab[], int taille); // Créer un noeud
+
+void creer_code(noeud *element, int code, int profondeur, noeud *aplhabet[NB_CARACTERES]); // Créer le code de chaque caractère
+
+void ecrire_entete(FILE *fic_compresse, noeud *alphabet[256], char *nom_ficher); // Ecrire l'entête du fichier compressé
+
+void ecrire_codes_caracteres(FILE *fic_compresse, char *nom_fichier, noeud *alphabet[256]); // Ecrire les codes des caractères dans le fichier compressé
+
+#endif // HUFFMAN_C_HUFFMAN_TREE_H
