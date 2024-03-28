@@ -1,28 +1,46 @@
 #ifndef HUFFMAN_C_HUFFMAN_TREE_H
 #define HUFFMAN_C_HUFFMAN_TREE_H
 
-#include "huffman.h"
-typedef struct noeud
-{
+#include <stdio.h>
+#include <stdlib.h>
+#include <limits.h>
+#include <string.h>
+
+#define NB_CARACTERES 256
+
+typedef struct noeud {
     char caractere;
     int occurrence;
     char *codage;
     int nb_bits_codage;
     struct noeud *fils_gauche;
     struct noeud *fils_droit;
-} noeud;
+} noeud_s;
+
 
 /* Prototypage des fonctions*/
-void initialiser_arbre_huffman(noeud *arbre_huffman[NB_CARACTERES]); // Initialiser l'arbre de Huffman
+// Afficher l'usage
+void usage(char *nom_prog);
 
-noeud *creer_feuille(int *tab, int index); // Créer une feuille
+// Compter le nombre d'occurences de chaque caractère
+void occurence(FILE *fic, int tab[NB_CARACTERES]);
 
-void creer_noeud(noeud *tab[], int taille); // Créer un noeud
+// Initialiser l'arbre de Huffman
+void initialiser_arbre_huffman(noeud_s *arbre_huffman[NB_CARACTERES]);
 
-void creer_code(noeud *element, int code, int profondeur, noeud *aplhabet[NB_CARACTERES]); // Créer le code de chaque caractère
+// Créer une feuille
+noeud_s *creer_feuille(int *tab, int index);
 
-void ecrire_entete(FILE *fic_compresse, noeud *alphabet[256], char *nom_ficher); // Ecrire l'entête du fichier compressé
+// Chercher les deux plus petits éléments
+void chercher_deux_plus_petits(noeud_s *tab[], int taille, int *index1, int *index2);
 
-void ecrire_codes_caracteres(FILE *fic_compresse, char *nom_fichier, noeud *alphabet[256]); // Ecrire les codes des caractères dans le fichier compressé
+// Créer un noeud
+void creer_noeud(noeud_s *tab[], int taille);
+
+// Afficher le code
+void affichage_code(int nbr_bits, int codage);
+
+// Créer le code de chaque caractère
+void creer_code(noeud_s *element, int code, int profondeur, noeud_s *aplhabet[NB_CARACTERES]);
 
 #endif // HUFFMAN_C_HUFFMAN_TREE_H
