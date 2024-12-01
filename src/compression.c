@@ -27,7 +27,7 @@ void ecrire_entete(FILE *fic_compresse, noeud_s *alphabet[NB_CARACTERES], char *
             fprintf(stderr, "Ecriture de la feuille %c\n", i);
             fwrite(&alphabet[i]->caractere, sizeof(char), 1, fic_compresse);
             fwrite(&alphabet[i]->nb_bits_codage, sizeof(int), 1, fic_compresse);
-            fwrite(alphabet[i]->codage, sizeof(char), alphabet[i]->nb_bits_codage, fic_compresse);
+            fwrite(&alphabet[i]->codage, sizeof(int), 1, fic_compresse);
             fprintf(stderr, "Feuille %d ecrite\n", i);
         }
     }
@@ -35,8 +35,9 @@ void ecrire_entete(FILE *fic_compresse, noeud_s *alphabet[NB_CARACTERES], char *
     fprintf(stderr, "Ecriture du nom du fichier\n");
     // On écrit la longueur du nom du fichier
     longueur_nom_fichier = strlen(nom_ficher);
-    // On écrit le nom du fichier dans le fichier
     fwrite(&longueur_nom_fichier, sizeof(int), 1, fic_compresse);
+    // On écrit le nom du fichier dans le fichier
+    fwrite(nom_ficher, sizeof(char), longueur_nom_fichier, fic_compresse);
     fprintf(stderr, "Nom du fichier ecrit\n");
 }
 
@@ -59,23 +60,25 @@ void ecrire_codes_caracteres(FILE *fic_compresse, char *nom_fichier, noeud_s *al
         noeud_s *caractere = alphabet[c]; // On récupère le noeud_s du caractère lu
 
         for (int i = 0; i < caractere->nb_bits_codage; i++) {
-            bit_buffer = (bit_buffer << 1) | (caractere->codage[i] -
-                                              '0'); // On décale le buffer d'un bit vers la gauche et on ajoute le bit du codage
-            bit_count++;                                                   // On incrémente le nombre de bits dans le buffer
+            // On décale le buffer d'un bit vers la gauche et on ajoute le bit du codage
+            bit_buffer = bit_buffer << 1;
+            bit_buffer = bit_buffer | ((caractere->codage >> (caractere->nb_bits_codage - i - 1)) & 1);
+            // On incrémente le nombre de bits dans le buffer
+            bit_count++;
 
-            // Ecrire le buffer dans le fichier si il est plein
-            if (bit_count >= 8) {
+            // Ecrire le buffer dans le fichier s'il est plein
+            if (bit_count == 8) {
                 fputc(bit_buffer, fic_compresse); // On écrit le buffer dans le fichier
-                bit_buffer = 0;                   // On réinitialise le buffer
-                bit_count = 0;                    // On réinitialise le nombre de bits dans le buffer
+                bit_buffer = 0;                    // On réinitialise le buffer
+                bit_count = 0;                     // On réinitialise le nombre de bits dans le buffer
             }
         }
     }
 
-    // Ecrire les derniers bits restants dans le buffer
+    // Si le buffer n'est pas vide, on écrit les bits restants dans le fichier
     if (bit_count > 0) {
-        bit_buffer <<= (8 - bit_count);   // On décale le buffer pour que le dernier bit soit le bit de poids fort
-        fputc(bit_buffer, fic_compresse); // On écrit le buffer dans le fichier
+        bit_buffer = bit_buffer << (8 - bit_count); // On décale le buffer pour qu'il soit aligné à gauche
+        fputc(bit_buffer, fic_compresse);           // On écrit le buffer dans le fichier
     }
 
     fclose(fic_original); // On ferme le fichier

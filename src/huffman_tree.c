@@ -14,12 +14,13 @@ noeud_s *creer_feuille(int *tab, int index) {
     }
     feuille->caractere = index;
     feuille->occurrence = tab[index];
-    feuille->codage = NULL;
+    feuille->codage = -1;
     feuille->nb_bits_codage = 0;
     feuille->fils_gauche = NULL;
     feuille->fils_droit = NULL;
     return feuille;
 }
+
 
 void creer_noeud(noeud_s *tab[], int taille) {
     int index1, index2;   // Indices des deux plus petits éléments
@@ -27,73 +28,81 @@ void creer_noeud(noeud_s *tab[], int taille) {
 
     chercher_deux_plus_petits(tab, taille, &index1, &index2); // On cherche les deux plus petits éléments
 
-    // On alloue la mémoire pour le nouveau noeud_s
-    nouveau_noeud = (noeud_s *) malloc(sizeof(noeud_s));
-    // Si l'allocation échoue
-    if (nouveau_noeud == NULL) {
-        fprintf(stderr, "Erreur allocation memoire pour le noeud_s\n");
-        exit(EXIT_FAILURE);
-    }
+    // Si on a trouvé les deux plus petits éléments
+    if (index1 != -1 && index2 != -1) {
+        // On crée un nouveau noeud_s
+        nouveau_noeud = (noeud_s *) malloc(sizeof(noeud_s));
+        if (nouveau_noeud == NULL) {
+            fprintf(stderr, "Erreur allocation memoire pour le nouveau noeud\n");
+            exit(EXIT_FAILURE);
+        }
+        // On initialise le nouveau noeud_s
+        nouveau_noeud->caractere = -1;
+        nouveau_noeud->occurrence = tab[index1]->occurrence + tab[index2]->occurrence;
+        nouveau_noeud->codage = -1;
+        nouveau_noeud->nb_bits_codage = 0;
+        nouveau_noeud->fils_gauche = tab[index1];
+        nouveau_noeud->fils_droit = tab[index2];
 
-    // On initialise le caractère à '\0'
-    nouveau_noeud->caractere = '\0';
-    // On initialise l'occurrence à la somme des occurrences des deux plus petits élément
-    nouveau_noeud->occurrence = tab[index1]->occurrence + tab[index2]->occurrence;
-    // On initialise le codage à NULL
-    nouveau_noeud->codage = NULL;
-    // On initialise le nombre de bits du codage à 0
-    nouveau_noeud->nb_bits_codage = 0;
-    nouveau_noeud->fils_gauche = tab[index1];
-    nouveau_noeud->fils_droit = tab[index2];
+        if (index1 < index2) {
+            tab[index1] = nouveau_noeud;
+            tab[index2] = NULL;
 
-    // On remplace le premier plus petit élément par le nouveau noeud_s
-    tab[index1] = nouveau_noeud;
-    // On décale les éléments suivants
-    for (int i = index2; i < taille - 1; i++) {
-        tab[i] = tab[i + 1];
+            for (int i = index2; i < taille - 1; i++) {
+                tab[i] = tab[i + 1];
+            }
+        } else {
+            tab[index2] = nouveau_noeud;
+            tab[index1] = NULL;
+
+            for (int i = index1; i < taille - 1; i++) {
+                tab[i] = tab[i + 1];
+            }
+        }
+        // On met à jour la taille du tableau
+        tab[taille - 1] = NULL;
     }
 }
 
 void creer_code(noeud_s *element, int code, int profondeur, noeud_s *aplhabet[NB_CARACTERES]) {
-    if (element == NULL)
-        return;
-
-    // Si on est sur une feuille
-    if (element->fils_gauche == NULL && element->fils_droit == NULL) {
-        // Masque pour récupérer le bit de poids fort
-        int masque;
-        // On alloue la mémoire pour le codage
-        element->codage = (char *) malloc(sizeof(char) * profondeur);
-        // Si l'allocation échoue
-        if (element->codage == NULL) {
-            fprintf(stderr, "Erreur allocation memoire pour le codage\n");
-            exit(EXIT_FAILURE);
-        }
-        // On stocke le nombre de bits du codage
+    if (est_feuille(element)) {
+        // On met à jour les informations du noeud_s
+        element->codage = code;
         element->nb_bits_codage = profondeur;
 
-        // On décale le bit de poids fort à la bonne position
-        masque = 1 << (profondeur - 1);
-        // Pour chaque bit du codage
-        for (int i = 0; i < profondeur; i++) {
-            // On récupère le bit de poids fort
-            element->codage[i] = ((code & masque) == 0) ? '0' : '1';
-            // On décale le masque d'un bit vers la droite
-            masque >>= 1;
-        }
-
-        // On ajoute le caractère à l'alphabet
+        // On stocke le noeud_s dans le tableau des nœuds de l'alphabet
         aplhabet[(int) (element->caractere)] = element;
-        // On affiche le caractère et le codage
-        printf("Caractere : %c, Codage : ", element->caractere);
-        for (int i = 0; i < profondeur; i++) {
-            printf("%c", element->codage[i]);
-        }
-        printf("\n");
+        fprintf(stderr, "(DEBUG) Element stocke dans l'alphabet : %c\n", element->caractere);
+
+        fprintf(stdout, "Caractere : %c, Occurrence : %d, ", element->caractere, element->occurrence);
+        affichage_code(element->nb_bits_codage, element->codage);
+        return;
     } else {
-        // Appel récursif pour le fils gauche
+        // On crée le code du fils gauche
         creer_code(element->fils_gauche, (code << 1) | 0, profondeur + 1, aplhabet);
-        // Appel récursif pour le fils droit
+        // On crée le code du fils droit
         creer_code(element->fils_droit, (code << 1) | 1, profondeur + 1, aplhabet);
     }
+}
+
+int est_feuille(noeud_s *element) {
+    return element->fils_gauche == NULL && element->fils_droit == NULL;
+}
+
+void afficher_arbre(noeud_s *element, int profondeur) {
+    if (element == NULL) {
+        fprintf(stdout, "Arbre vide\n");
+        return;
+    }
+    afficher_arbre(element->fils_gauche, profondeur + 1);
+    for (int i = 0; i < profondeur; i++) {
+        fprintf(stdout, "  ");
+    }
+    if (element->caractere == ' ') {
+        fprintf(stdout, "Caractere : ESPACE (%d), Occurrence : %d\n", element->caractere, element->occurrence);
+    } else {
+        fprintf(stdout, "Caractere : %c (%d), Occurrence : %d\n", element->caractere, element->caractere,
+                element->occurrence);
+    }
+    afficher_arbre(element->fils_droit, profondeur + 1);
 }

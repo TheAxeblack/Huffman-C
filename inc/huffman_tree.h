@@ -11,7 +11,7 @@
 typedef struct noeud {
     char caractere;
     int occurrence;
-    char *codage;
+    int codage;
     int nb_bits_codage;
     struct noeud *fils_gauche;
     struct noeud *fils_droit;
@@ -22,8 +22,11 @@ typedef struct noeud {
 // Afficher l'usage
 void usage(char *nom_prog);
 
-// Compter le nombre d'occurences de chaque caractère
-void occurence(FILE *fic, int tab[NB_CARACTERES]);
+// Initialiser le tableau des occurrences à zéro
+void initialiser_occurrences(int tab[NB_CARACTERES]);
+
+// Compter le nombre d'occurrences de chaque caractère
+void occurrence(FILE *fic, int tab[NB_CARACTERES]);
 
 // Initialiser l'arbre de Huffman
 void initialiser_arbre_huffman(noeud_s *arbre_huffman[NB_CARACTERES]);
@@ -34,7 +37,7 @@ noeud_s *creer_feuille(int *tab, int index);
 // Chercher les deux plus petits éléments
 void chercher_deux_plus_petits(noeud_s *tab[], int taille, int *index1, int *index2);
 
-// Créer un noeud
+// Créer un nœud
 void creer_noeud(noeud_s *tab[], int taille);
 
 // Afficher le code
@@ -42,5 +45,11 @@ void affichage_code(int nbr_bits, int codage);
 
 // Créer le code de chaque caractère
 void creer_code(noeud_s *element, int code, int profondeur, noeud_s *aplhabet[NB_CARACTERES]);
+
+// Est-ce que le nœud est une feuille ?
+int est_feuille(noeud_s *element);
+
+// Afficher l'arbre
+void afficher_arbre(noeud_s *element, int profondeur);
 
 #endif // HUFFMAN_C_HUFFMAN_TREE_H

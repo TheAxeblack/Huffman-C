@@ -8,7 +8,12 @@ void usage(char *nom_prog) {
     exit(EXIT_FAILURE);
 }
 
-void occurence(FILE *fic, int tab[NB_CARACTERES]) {
+void initialiser_occurrences(int tab[NB_CARACTERES]) {
+    for (int i = 0; i < NB_CARACTERES; i++)
+        tab[i] = 0;
+}
+
+void occurrence(FILE *fic, int tab[NB_CARACTERES]) {
     int c;
     while ((c = fgetc(fic)) != EOF)
         tab[c]++;
@@ -25,12 +30,12 @@ void chercher_deux_plus_petits(noeud_s *tab[], int taille, int *index1, int *ind
         return;
     }
 
-    for (int i = 0; i < NB_CARACTERES; i++) {
+    for (int i = 0; i < taille; i++) {
         if (tab[i] != NULL) {
             if (tab[i]->occurrence < min1) {
                 min2 = min1;
-                min1 = tab[i]->occurrence;
                 *index2 = *index1;
+                min1 = tab[i]->occurrence;
                 *index1 = i;
             } else if (tab[i]->occurrence < min2) {
                 min2 = tab[i]->occurrence;
@@ -41,25 +46,26 @@ void chercher_deux_plus_petits(noeud_s *tab[], int taille, int *index1, int *ind
 }
 
 void affichage_code(int nbr_bits, int codage) {
-    for (int i = nbr_bits - 1; i >= 0; i--) // Pour chaque bit du codage
-    {
-        int bit = (codage >> i) & 1; // On récupère le bit de poids fort
-        fprintf(stdout, "%d", bit);  // On affiche le bit de poids fort
+    fprintf(stdout, "Codage : ");
+    for (int i = nbr_bits - 1; i >= 0; i--) {
+        fprintf(stdout, "%d", (codage >> i) & 1);
     }
-    fprintf(stdout, "\n"); // On saute une ligne
+    fprintf(stdout, "\n");
 }
 
 
 int main(int argc, char **argv) {
     FILE *fp;                             // Fichier à compresser
-    int occurrences[NB_CARACTERES] = {0}; // Initialisation du tableau d'occurences à 0
+    int occurrences[NB_CARACTERES]; // Initialisation du tableau d'occurrences à zéro
     int nb_elements = 0;                  // Nombre d'éléments dans l'arbre
-    noeud_s *arbre_huffman[NB_CARACTERES];// Tableau des noeuds de l'arbre de Huffman
-    noeud_s *alphabet[NB_CARACTERES];     // Tableau des noeuds de l'alphabet
+    noeud_s *arbre_huffman[NB_CARACTERES];// Tableau des nœuds de l'arbre de Huffman
+    noeud_s *alphabet[NB_CARACTERES];     // Tableau des nœuds de l'alphabet
     FILE *fic_compresse;                  // Fichier compressé
 
     if (argc < 2)
         usage(argv[0]);
+
+    initialiser_occurrences(occurrences);
 
     fp = fopen(argv[1], "r");
 
@@ -68,27 +74,28 @@ int main(int argc, char **argv) {
         exit(EXIT_FAILURE);
     }
 
-    occurence(fp, occurrences);
+    occurrence(fp, occurrences);
 
     fclose(fp);
 
     initialiser_arbre_huffman(arbre_huffman);
 
-    for (int i = 0; i < NB_CARACTERES; i++) {
+    for (int i = 0, j = 0; i < NB_CARACTERES; i++) {
         if (occurrences[i] > 0) {
+            arbre_huffman[j] = creer_feuille(occurrences, i);
             nb_elements++;
-            arbre_huffman[i] = creer_feuille(occurrences, i);
+            j++;
         }
     }
 
-    for (int i = 0; i < NB_CARACTERES; i++) {
-        if (arbre_huffman[i] != NULL) {
-            if (arbre_huffman[i]->caractere == ' ')
-                fprintf(stdout, "Caractere : ESPACE (%d), Occurrence : %d\n", arbre_huffman[i]->caractere,
-                        arbre_huffman[i]->occurrence);
-            else
-                fprintf(stdout, "Caractere : %c (%d), Occurrence : %d\n", arbre_huffman[i]->caractere,
-                        arbre_huffman[i]->caractere, arbre_huffman[i]->occurrence);
+    fprintf(stdout, "Affichage de l'arbre de Huffman (avant reduction):\n");
+    for (int i = 0; i < nb_elements; i++) {
+        if (arbre_huffman[i]->caractere == ' ') {
+            fprintf(stdout, "Caractere : ESPACE (%d), Occurrence : %d\n", arbre_huffman[i]->caractere,
+                    arbre_huffman[i]->occurrence);
+        } else {
+            fprintf(stdout, "Caractere : %c (%d), Occurrence : %d\n", arbre_huffman[i]->caractere,
+                    arbre_huffman[i]->caractere, arbre_huffman[i]->occurrence);
         }
     }
 
@@ -98,38 +105,38 @@ int main(int argc, char **argv) {
     }
 
     fprintf(stdout, "\nAffichage de l'arbre de Huffman (apres reduction):\n");
-
     for (int i = 0; i < NB_CARACTERES; i++) {
         if (arbre_huffman[i] != NULL) {
-            if (arbre_huffman[i]->caractere == ' ')
+            fprintf(stdout, "Element %d\n", i);
+            if (arbre_huffman[i]->caractere == ' ') {
                 fprintf(stdout, "Caractere : ESPACE (%d), Occurrence : %d\n", arbre_huffman[i]->caractere,
                         arbre_huffman[i]->occurrence);
-            else
+            } else {
                 fprintf(stdout, "Caractere : %c (%d), Occurrence : %d\n", arbre_huffman[i]->caractere,
                         arbre_huffman[i]->caractere, arbre_huffman[i]->occurrence);
+            }
         }
     }
 
-    // On initialise le tableau des noeuds de l'alphabet
+    // On initialise le tableau des nœuds de l'alphabet
     for (int i = 0; i < NB_CARACTERES; i++)
         alphabet[i] = NULL;
 
     // On crée le codage de chaque caractère
     for (int i = 0; i < NB_CARACTERES; i++) {
         if (arbre_huffman[i] != NULL) {
-            fprintf(stdout, "\nCodage de %c (%d) : ", arbre_huffman[i]->caractere, arbre_huffman[i]->caractere);
             creer_code(arbre_huffman[i], 0, 0, alphabet);
         }
     }
 
-    // On appelle la fonction pour écrire l'entête dans le fichier compressé
-    fic_compresse = fopen("fichier_compresse.bin", "wb"); // On ouvre le fichier compressé en mode binaire pour écriture
+    // On ouvre le fichier compressé en mode binaire pour écriture
+    fic_compresse = fopen("fichier_compresse.bin", "wb");
     if (fic_compresse == NULL) {
         fprintf(stderr, "Erreur lors de la création du fichier compressé.\n");
         exit(EXIT_FAILURE);
     }
-    ecrire_entete(fic_compresse, alphabet, argv[1]); // On écrit l'entête dans le fichier compressé
-    fclose(fic_compresse);                           // On ferme le fichier compressé
+    ecrire_entete(fic_compresse, alphabet, argv[1]);
+    fclose(fic_compresse);
 
     // On appelle la fonction pour écrire les codes des caractères dans le fichier compressé
     // On ouvre le fichier compressé en mode binaire pour ajout (écriture à la fin)
@@ -137,7 +144,8 @@ int main(int argc, char **argv) {
 
     // On vérifie si l'ouverture du fichier compressé a réussi
     if (fic_compresse == NULL) {
-        fprintf(stderr, "Erreur lors de l'ouverture du fichier compressé pour l'écriture des codes des caractères.\n");
+        fprintf(stderr,
+                "Erreur lors de l'ouverture du fichier compressé pour l'écriture des codes des caractères.\n");
         exit(EXIT_FAILURE);
     }
     // On écrit les codes dans le fichier compressé
